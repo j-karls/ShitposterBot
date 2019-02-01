@@ -55,6 +55,11 @@ async def on_message(message):
             await client.send_message(message.channel, msg)
 
 
+# def getJSON:
+# import requests
+# r = requests.get(p'https://www.reddit.com/r/{subreddit}.json')
+# r.json()
+
 @client.event
 async def on_ready():
     print('Logged in as')
