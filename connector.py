@@ -3,6 +3,7 @@ import discord
 import re
 import requests
 import random
+from tinydb import TinyDB, Query
 
 
 def discord_connect(token):
@@ -17,8 +18,15 @@ def read_file(path):
     # It may be worth doing explicitly
 
 
+def database_setup(path):
+    return TinyDB(path)
+
+
 client = discord_connect(read_file('bot-token.secret'))
 # Connects with the bot-token saved within file
+db = database_setup('./../db.json')
+connections = Query()
+# Setup tinydb database
 
 
 @client.event
@@ -31,26 +39,29 @@ async def on_message(message):
         await discord_send_message(message.channel, message_help(message.author.mention))
 
     elif message.content.startswith('--connections'):
-        await discord_send_message(message.channel, message_connections(message, get_connections()))
+        await discord_send_message(message.channel, message_connections(message, get_connections(message.channel,
+                                                                                                 message.server)))
 
     elif message.content.startswith('--add'):
         try:
             regex = regex_search(r"--add\s+(\w*)\s+(\w*)\s+(\w*)\s+(\w*)", 4, message.content)
             subreddit, amount, frequency, selection = regex.group(1), regex.group(2), regex.group(3), regex.group(4)
-            add_connection(subreddit, amount, frequency, selection)
-            await discord_send_message(message.channel,
-                                       message_added_connection(message, subreddit, amount, frequency, selection))
+            add_connection(subreddit, amount, frequency, selection, message.channel, message.server)
+            await discord_send_message(message.channel, message_added_connection(message, subreddit, amount, frequency,
+                                                                                 selection))
         except TypeError:
             await discord_send_message(message.channel, message_wrong_syntax("--add"))
 
     elif message.content.startswith('--remove'):
         try:
             regex = regex_search(r"--remove\s+(\d*)", 1, message.content)
-            connection_number, connection_info = regex.group(1), get_connection_info(regex.group(1))
-            remove_connection(connection_number)
-            await discord_send_message(message.channel, message_removed_connection(connection_info))
+            info = get_connection_info(regex.group(1))
+            remove_connection(info['subreddit'], info['amount'], info['frequency'],
+                              info['selection'], message.channel, message.server)
+            await discord_send_message(message.channel, message_removed_connection(info))
         except TypeError:
             await discord_send_message(message.channel, message_wrong_syntax("--remove"))
+        # Todo what about except valueError if the user types in to remove something that doesnt exist?
 # TODO Check if there's something behind my regex? Only if there isn't, do I execute it.
 
 
@@ -66,20 +77,23 @@ async def discord_send_message(channel, message):
     await client.send_message(channel, message)
 
 
-def add_connection(subreddit, amount, frequency, selection):
-    # TODO
+def add_connection(subreddit, amount, frequency, selection, channel, server):
+    return db.insert({'subreddit': subreddit, 'amount': amount, 'frequency': frequency, 'selection': selection,
+                      'channel': channel, 'server': server})
 
 
-def get_connection_info(connection):
-    # TODO
+def remove_connection(subreddit, amount, frequency, selection, channel, server):
+    db.remove(connections.subreddit == subreddit & connections.amount == amount & connections.frequency == frequency &
+              connections.selection == selection & connections.channel == channel & connections.server == server)
 
 
-def remove_connection(connection_number):
-    # TODO
+def get_connection_info(connection_eid):
+    return db.get(connection_eid)
+# Todo Check for errors boi. What if there are none?
 
 
-def get_connections():
-    # TODO
+def get_connections(channel, server):
+    return db.search(connections.server == server & connections.channel == channel)
 
 
 def message_wrong_syntax(command_name):
@@ -89,7 +103,7 @@ def message_wrong_syntax(command_name):
 def get_json(subreddit, amount, randomize):
     posts = requests.get(f'https://www.reddit.com/r/{subreddit}.json').json()["data"]["children"]
     if randomize:
-        random.shuffle(posts) # CAN I DO THIS? Is it even a list?
+        random.shuffle(posts)  # todo CAN I DO THIS? Is it even a list?
     return [posts[x]["data"]["url"] for x in range(amount)]
     # TODO What happens if amount is greater than the amount of posts?
     # TODO What happens if there is no field: "url"?
@@ -121,7 +135,8 @@ def message_help(message):
 
 
 def message_connections(message, connections):
-    return "All connections in channel(?) and server (?)"
+    return f'All connections in channel(?) and server (?){connections}'  # TODO for each element also show its eid
+    # connection.eid
     # return list of connections
 
 
