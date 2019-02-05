@@ -6,14 +6,16 @@ import random
 from tinydb import TinyDB, Query
 
 
-def discord_connect(token):
-    connection = discord.Client()
-    connection.run(token)
-    return connection
+def discord_startClient():
+    return discord.Client()
+
+
+def discord_startBot(client, token):
+    client.run(token)
 
 
 def read_file(path):
-    open(path, 'r').read()
+    return open(path, 'r').read()
     # We don't close the stream ourselves, garbage collector will come along shortly
     # It may be worth doing explicitly
 
@@ -22,8 +24,7 @@ def database_setup(path):
     return TinyDB(path)
 
 
-client = discord_connect(read_file('bot-token.secret'))
-# Connects with the bot-token saved within file
+client = discord_startClient()
 db = database_setup('./../db.json')
 connections = Query()
 # Setup tinydb database
@@ -53,7 +54,7 @@ async def on_message(message):
         return
 
     if message.content.startswith('--help'):
-        await discord_send_message(message.channel, message_help(message.author.mention))
+        await discord_send_message(message.channel, message_help(message))
 
     elif message.content.startswith('--connections'):
         await discord_send_message(message.channel, message_connections(message, get_connections(message.channel,
@@ -166,6 +167,10 @@ def message_added_connection(message, subreddit, amount, selection, frequency):
 def message_removed_connection(connection_info):
     return 'Removed Connection: \n' \
           f'{connection_info}'
+
+
+discord_startBot(client, read_file('bot-token.secret'))
+# Connects with the bot-token saved within file
 
 
 
