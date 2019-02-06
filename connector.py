@@ -6,12 +6,12 @@ import random
 from tinydb import TinyDB, Query
 
 
-def discord_startClient():
+def discord_client_start():
     return discord.Client()
 
 
-def discord_startBot(client, token):
-    client.run(token)
+def discord_bot_run(discord_client, token):
+    discord_client.run(token)
 
 
 def read_file(path):
@@ -24,10 +24,13 @@ def database_setup(path):
     return TinyDB(path)
 
 
-client = discord_startClient()
-db = database_setup('./../db.json')
-connections = Query()
-# Setup tinydb database
+def database_query_setup():
+    return Query()
+
+
+Client = discord_client_start()
+Db = database_setup('./../shitposterFiles/db.json')
+Connections = database_query_setup()
 
 
 #from apscheduler.scheduler import Scheduler
@@ -47,10 +50,10 @@ connections = Query()
 
 
 
-@client.event
+@Client.event
 async def on_message(message):
     # To avoid the bot to replying to itself
-    if message.author == client.user:
+    if message.author == Client.user:
         return
 
     if message.content.startswith('--help'):
@@ -92,26 +95,26 @@ def regex_search(regex, number_of_match_groups, text):
 
 
 async def discord_send_message(channel, message):
-    await client.send_message(channel, message)
+    await Client.send_message(channel, message)
 
 
 def add_connection(subreddit, amount, frequency, selection, channel, server):
-    return db.insert({'subreddit': subreddit, 'amount': amount, 'frequency': frequency, 'selection': selection,
+    return Db.insert({'subreddit': subreddit, 'amount': amount, 'frequency': frequency, 'selection': selection,
                       'channel': channel, 'server': server})
 
 
 def remove_connection(subreddit, amount, frequency, selection, channel, server):
-    db.remove(connections.subreddit == subreddit & connections.amount == amount & connections.frequency == frequency &
-              connections.selection == selection & connections.channel == channel & connections.server == server)
+    Db.remove(Connections.subreddit == subreddit & Connections.amount == amount & Connections.frequency == frequency &
+              Connections.selection == selection & Connections.channel == channel & Connections.server == server)
 
 
 def get_connection_info(connection_eid):
-    return db.get(connection_eid)
+    return Db.get(connection_eid)
 # Todo Check for errors boi. What if there are none?
 
 
 def get_connections(channel, server):
-    return db.search(connections.server == server & connections.channel == channel)
+    return Db.search((Connections.server == server) & (Connections.channel == channel))
 
 
 def message_wrong_syntax(command_name):
@@ -119,7 +122,8 @@ def message_wrong_syntax(command_name):
 
 
 def get_json(subreddit, amount, randomize):
-    posts = requests.get(f'https://www.reddit.com/r/{subreddit}.json').json()["data"]["children"]
+    posts = requests.get(f'https://www.reddit.com/r/{subreddit}.json',
+                         headers={'User-agent': 'shitposterBot 0.1'}).json()["data"]["children"]
     if randomize:
         random.shuffle(posts)  # todo CAN I DO THIS? Is it even a list?
     return [posts[x]["data"]["url"] for x in range(amount)]
@@ -127,11 +131,11 @@ def get_json(subreddit, amount, randomize):
     # TODO What happens if there is no field: "url"?
 
 
-@client.event
+@Client.event
 async def on_ready():
     print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
+    print(Client.user.name)
+    print(Client.user.id)
     print('------')
 
 
@@ -153,9 +157,12 @@ def message_help(message):
 
 
 def message_connections(message, connections):
-    return f'All connections in channel(?) and server (?){connections}'  # TODO for each element also show its eid
+    return f'All connections in {message.channel} on {message.server}: \n ' \
+        '```' \
+        f'{connections} \n' \
+        f'```'  # TODO for each element also show its eid
     # connection.eid
-    # return list of connections
+    # return list of Connections
 
 
 def message_added_connection(message, subreddit, amount, selection, frequency):
@@ -169,7 +176,7 @@ def message_removed_connection(connection_info):
           f'{connection_info}'
 
 
-discord_startBot(client, read_file('bot-token.secret'))
+discord_bot_run(Client, read_file('./../shitposterFiles/bot-token.secret'))
 # Connects with the bot-token saved within file
 
 
