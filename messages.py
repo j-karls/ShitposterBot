@@ -24,8 +24,12 @@ def message_connections(message, connections):
         f'```'
 
 
+def format_connection(connection):
+    return f"{connection['subreddit']} {connection['amount']} {connection['frequency']} {connection['selection']}"
+
+
 def format_connections(connections):
-    c_list = [f"{x.eid} | {x['subreddit']} {x['amount']} {x['frequency']} {x['selection']}" for x in connections]
+    c_list = [f"{x.eid} | {format_connection(x)}" for x in connections]
     return "\n".join(c_list)
 
 
@@ -37,6 +41,6 @@ def message_added_connection(message, subreddit, amount, selection, frequency):
 
 def message_removed_connection(connection):
     return 'Removed Connection: \n' \
-          f'```' \
-          f'{format_connections(list(connection))} \n' \
-          f'```'
+           '```' \
+          f'{format_connection(connection)} \n' \
+           '```'

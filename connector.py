@@ -30,14 +30,21 @@ def add_connection(db, subreddit, amount, frequency, selection, channel, server)
                       'channel': channel, 'server': server})
 
 
-def remove_connection(db, query, subreddit, amount, frequency, selection, channel, server):
-    return db.remove(query.subreddit == subreddit & query.amount == amount & query.frequency == frequency &
-                     query.selection == selection & query.channel == channel & query.server == server)
+#def remove_connection(db, query, subreddit, amount, frequency, selection, channel, server):
+#    return db.remove((query.subreddit == subreddit) & (query.amount == amount) & (query.frequency == frequency) &
+#                     (query.selection == selection) & (query.channel == channel) & (query.server == server))
 
 
-def get_connection_info(db, connection_eid):
-    return db.get(connection_eid)
-# Todo Check for errors boi. What if there are none?
+def remove_connection(db, connection_id):
+    return db.remove(doc_ids=[connection_id])
+
+
+def get_connection(db, connection_id):
+    el = db.get(doc_id=connection_id)
+    if el is None:
+        raise ValueError
+    return el
+    # Returns either one connection or type None
 
 
 def get_connections(db, query, channel, server):
@@ -46,6 +53,10 @@ def get_connections(db, query, channel, server):
 
 def message_wrong_syntax(command_name):
     return f"Wrong syntax for command '{command_name}'. Check '--help' for info."
+
+
+def message_error(command_name, msg):
+    return f"Error occurred while executing command '{command_name}': {msg}"
 
 
 def get_json(subreddit, amount, randomize):

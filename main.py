@@ -21,13 +21,16 @@ async def on_message(message):
     if message.author == Client.user:
         return
 
+    elif message.content.startswith('--test'):
+        print(type(connector.get_connections(Db, Connections, message.channel, message.server)[1]))
+
     if message.content.startswith('--help'):
         await connector.discord_send_message(Client, message.channel, messages.message_help(message))
 
     elif message.content.startswith('--connections'):
-        await connector.discord_send_message(Client, message.channel,
-                messages.message_connections(message, connector.get_connections(Db, Connections, message.channel,
-                                             message.server)))
+        await connector.discord_send_message(
+            Client, message.channel, messages.message_connections(
+                message, connector.get_connections(Db, Connections, message.channel, message.server)))
 
     elif message.content.startswith('--add'):
         print(f"{type(message.channel)} + {type(message.channel.name)}")
@@ -45,14 +48,17 @@ async def on_message(message):
     elif message.content.startswith('--remove'):
         try:
             regex = regex_search(r"--remove\s+(\d*)", 1, message.content)
-            info = connector.get_connection_info(Db, regex.group(1))
-            connector.remove_connection(Db, Connections, info['subreddit'], info['amount'], info['frequency'],
-                                        info['selection'], message.channel.name, message.server.name)
+            connect_id = int(regex.group(1))
+            info = connector.get_connection(Db, connect_id)
+            connector.remove_connection(Db, connect_id)
             await connector.discord_send_message(Client, message.channel, messages.message_removed_connection(info))
         except TypeError:
             await connector.discord_send_message(Client, message.channel, connector.message_wrong_syntax("--remove"))
-        # Todo what about except valueError if the user types in to remove something that doesnt exist?
-# TODO Check if there's something behind my regex? Only if there isn't, do I execute it.
+        except ValueError:
+            await connector.discord_send_message(Client, message.channel, connector.message_error(
+                    "--remove", "A connection with that ID does not exist"))
+
+# TODO Check if there's something behind my regex? I should only execute if there isnt.
 
 
 def regex_search(regex, number_of_match_groups, text):
