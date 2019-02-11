@@ -28,18 +28,34 @@ def add_connection(db, subreddit, amount, frequency, selection, channel, server)
                       'channel': channel, 'server': server})
 
 
-def remove_connection(db, connection_id):
+def remove_connection(db, query, connection_id, channel, server):
+    try:
+        get_connection(db, query, connection_id, channel, server)
+        # If we can successfully get the item, that means that it does exist within the correct channel and server
+    except ValueError as e:
+        raise e
     return db.remove(doc_ids=[connection_id])
+    # doc_ids appears to override any query I input, so I cannot mix both
 
 
-def get_connection(db, connection_id):
-    el = db.get(doc_id=connection_id)
-    if el is None:
+def get_connection(db, query, connection_id, channel, server):
+    el = [lst for lst in db.search(is_server_and_channel(query, channel, server)) if lst.eid == connection_id]
+    if not el:
+        # No fitting connection
+        print("here")
         raise ValueError
-    return el
-    # Get returns either one connection or type None
+    if len(el) != 1:
+        print(len(el))
+        print(len(db.search(is_server_and_channel(query, channel, server))))
+        raise TypeError
+        # This should never happen, as there should only ever be at max one element with a specific ID
+    return el[0]
+    # Finds all channel/server connections, compares with the ID and then returns the one element that fits (if any)
 
 
 def get_connections(db, query, channel, server):
-    return db.search((query.server == server.name) & (query.channel == channel.name))
+    return db.search(is_server_and_channel(query, channel, server))
 
+
+def is_server_and_channel(query, channel, server):
+    return (query.server == server.name) & (query.channel == channel.name)

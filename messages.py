@@ -37,7 +37,7 @@ def format_connections(connections):
 def message_added_connection(message, subreddit, amount, selection, frequency):
     return 'Added connection: \n' \
           f'`{subreddit}` linked to channel `{message.channel}`. \n' \
-          f'It will write `{amount}` `{frequency}` posts `{selection}`'
+          f'It will write `{amount}` posts (`{frequency}`) `{selection}`'
 
 
 def message_removed_connection(connection):
@@ -53,3 +53,7 @@ def message_wrong_syntax(command_name):
 
 def message_error(command_name, msg):
     return f"Error occurred while executing command '{command_name}': {msg}"
+
+
+def message_send_links(connection_id, time):
+    return f"Posting dump of connection '{connection_id}' at time {time}: \n"
