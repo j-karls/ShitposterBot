@@ -1,5 +1,6 @@
 import connector
 import messages
+import loader
 import re
 
 
@@ -17,25 +18,26 @@ Connections = connector.database_query_setup()
 
 @Client.event
 async def on_message(message):
+    msg = message.content
+
     # To avoid the bot to replying to itself
     if message.author == Client.user:
         return
 
-    elif message.content.startswith('--test'):
+    elif msg.startswith('--test'):
         print(type(connector.get_connections(Db, Connections, message.channel, message.server)[1]))
 
-    if message.content.startswith('--help'):
+    if msg.startswith('--help'):
         await connector.discord_send_message(Client, message.channel, messages.message_help(message))
 
-    elif message.content.startswith('--connections'):
+    elif msg.startswith('--connections'):
         await connector.discord_send_message(
             Client, message.channel, messages.message_connections(
                 message, connector.get_connections(Db, Connections, message.channel, message.server)))
 
-    elif message.content.startswith('--add'):
-        print(f"{type(message.channel)} + {type(message.channel.name)}")
+    elif msg.startswith('--add'):
         try:
-            regex = regex_search(r"--add\s+(\w*)\s+(\d*)\s+(\w*)\s+(\w*)", 4, message.content)
+            regex = regex_search(r"--add\s+(\w*)\s+(\d*)\s+(\w*)\s+(\w*)", 4, msg)
             subreddit, amount, frequency, selection = regex.group(1), regex.group(2), regex.group(3), regex.group(4)
             connector.add_connection(Db, subreddit, amount, frequency, selection, message.channel.name,
                                      message.server.name)
@@ -45,9 +47,9 @@ async def on_message(message):
         except TypeError:
             await connector.discord_send_message(Client, message.channel, messages.message_wrong_syntax("--add"))
 
-    elif message.content.startswith('--remove'):
+    elif msg.startswith('--remove'):
         try:
-            regex = regex_search(r"--remove\s+(\d*)", 1, message.content)
+            regex = regex_search(r"--remove\s+(\d*)", 1, msg)
             connect_id = int(regex.group(1))
             info = connector.get_connection(Db, connect_id)
             connector.remove_connection(Db, connect_id)
@@ -57,6 +59,21 @@ async def on_message(message):
         except ValueError:
             await connector.discord_send_message(Client, message.channel, messages.message_error(
                     "--remove", "A connection with that ID does not exist"))
+
+    elif msg.startswith('--post'):
+        try:
+            regex = regex_search(r"--post\s+(\d*)", 1, msg)
+            connect_id = int(regex.group(1))
+            connection = connector.get_connection(Db, connect_id)
+            links = loader.get_reddit_links(connection["subreddit"], connection["amount"], connection["frequency"],
+                                            connection["selection"])
+            await connector.discord_send_message(Client, message.channel, messages.message_send_links(links))
+        except TypeError:
+            await connector.discord_send_message(Client, message.channel, messages.message_wrong_syntax("--post"))
+        except ValueError:
+            await connector.discord_send_message(Client, message.channel, messages.message_error(
+                "--post", "A connection with that ID does not exist"))
+
 
 # TODO Check if there's something behind my regex? I should only execute if there isnt.
 

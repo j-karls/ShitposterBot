@@ -6,6 +6,7 @@ def message_help(message):
             '`--connections` | Shows the list of subreddits connected to this Discord channel \n' \
             '`--add` [subreddit] [amount] [frequency] [selection] | Connects a subreddit to the Discord channel \n' \
             '`--remove` [connectionNumber] | Removes a subreddit connection \n' \
+            '`--post` [connectionNumber] | Cause a connection to post its results (this will not reset the timer) \n' \
             '\n' \
             'Parameters: \n' \
             'subreddit: A subreddit name \n' \
