@@ -43,7 +43,7 @@ async def on_message(message):
                                                  messages.message_added_connection(message, subreddit, amount,
                                                                                    frequency, selection))
         except TypeError:
-            await connector.discord_send_message(Client, message.channel, connector.message_wrong_syntax("--add"))
+            await connector.discord_send_message(Client, message.channel, messages.message_wrong_syntax("--add"))
 
     elif message.content.startswith('--remove'):
         try:
@@ -53,9 +53,9 @@ async def on_message(message):
             connector.remove_connection(Db, connect_id)
             await connector.discord_send_message(Client, message.channel, messages.message_removed_connection(info))
         except TypeError:
-            await connector.discord_send_message(Client, message.channel, connector.message_wrong_syntax("--remove"))
+            await connector.discord_send_message(Client, message.channel, messages.message_wrong_syntax("--remove"))
         except ValueError:
-            await connector.discord_send_message(Client, message.channel, connector.message_error(
+            await connector.discord_send_message(Client, message.channel, messages.message_error(
                     "--remove", "A connection with that ID does not exist"))
 
 # TODO Check if there's something behind my regex? I should only execute if there isnt.

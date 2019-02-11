@@ -44,3 +44,11 @@ def message_removed_connection(connection):
            '```' \
           f'{format_connection(connection)} \n' \
            '```'
+
+
+def message_wrong_syntax(command_name):
+    return f"Wrong syntax for command '{command_name}'. Check '--help' for info."
+
+
+def message_error(command_name, msg):
+    return f"Error occurred while executing command '{command_name}': {msg}"
