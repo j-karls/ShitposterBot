@@ -1,6 +1,7 @@
 import connector
 import messages
 import loader
+import scheduler
 import re
 import datetime
 
@@ -131,5 +132,14 @@ async def on_ready():
 #sched.add_cron_job(job_function,  minute='0-59')
 
 
+async def search_submissions(func):
+    while(is_time(datetime.now())):
+        # do your stuff
+        await asyncio.sleep(1)
+
+
 connector.discord_bot_run(Client, read_file(f'{FilePath}/bot-token.secret'))
 # Connects with the bot-token saved within file
+Client.loop.create_task(scheduler.)
+
+
