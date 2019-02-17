@@ -4,6 +4,7 @@ import loader
 import scheduler
 import re
 import datetime
+import asyncio
 
 
 def read_file(path):
@@ -132,11 +133,15 @@ async def on_ready():
 #sched.add_cron_job(job_function,  minute='0-59')
 
 
-async def search_submissions(func):
-    while(is_time(datetime.now())):
-        # do your stuff
+async def schedule_connection_dumps():
+    while True:
+        now = datetime.now()
+        tasks = connector.get_connections_to_post(Db, Connections, now)
+        [post_connection(c) for c in tasks]
+        [connector.update_connection(c["time"] = now) for c in tasks]
         await asyncio.sleep(1)
 
+# remember to add the time thing in database
 
 connector.discord_bot_run(Client, read_file(f'{FilePath}/bot-token.secret'))
 # Connects with the bot-token saved within file

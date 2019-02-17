@@ -1,5 +1,6 @@
 # Works only with Python 3.6
 import discord
+import datetime
 from tinydb import TinyDB, Query
 
 
@@ -45,8 +46,6 @@ def get_connection(db, query, connection_id, channel, server):
         print("here")
         raise ValueError
     if len(el) != 1:
-        print(len(el))
-        print(len(db.search(is_server_and_channel(query, channel, server))))
         raise TypeError
         # This should never happen, as there should only ever be at max one element with a specific ID
     return el[0]
@@ -59,3 +58,7 @@ def get_connections(db, query, channel, server):
 
 def is_server_and_channel(query, channel, server):
     return (query.server == server.name) & (query.channel == channel.name)
+
+
+def get_connections_to_post(db, query, time):
+    return db.search(time > datetime.fromtimestamp(query.time))
