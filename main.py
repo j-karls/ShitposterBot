@@ -70,18 +70,12 @@ async def on_message(message):
             regex = regex_search(r"--post\s+(\d*)", 1, msg)
             connect_id = int(regex.group(1))
             connection = connector.get_connection(Db, Connections, connect_id, chn, srv)
-            links = loader.get_reddit_links(
-                connection["subreddit"], int(connection["amount"]), check_frequency(connection["frequency"]),
-                ((check_selection(connection["selection"])) == "randomize"))
-            await connector.discord_send_message(
-                Client, chn, messages.message_send_links(connect_id, datetime.datetime.now()))
-            [await connector.discord_send_message(Client, chn, link) for link in links]
+            await post_connection(Client, connection)
         except TypeError:
             await connector.discord_send_message(Client, chn, messages.message_wrong_syntax("--post"))
         except ValueError:
             await connector.discord_send_message(Client, chn, messages.message_error(
                 "--post", "A connection with that ID does not exist"))
-
 
 # TODO Check if there's something behind my regex? I should only execute if there isnt.
 
@@ -101,12 +95,20 @@ def check_frequency(frequency):
 
 def regex_search(regex, number_of_match_groups, text):
     res = re.search(regex, text)
-    # print(f"{0} {res.group(0)}")
     for x in range(1, number_of_match_groups + 1):
-        # print(f"{x} {res.group(x)}")
         if res.group(x) is None:
             raise TypeError
     return res
+
+
+async def post_connection(client, connection):
+    sub, amount, freq, random, chn, srv = connection["subreddit"], int(connection["amount"]), connection["frequency"], \
+                                (connection["selection"] == "randomize"), connection["channel"], connection["server"]
+    links = loader.get_reddit_links(sub, amount, freq, random)
+    await connector.discord_send_message(client, chn,
+                                         messages.message_send_links(connection.eid, datetime.datetime.now()))
+    [await connector.discord_send_message(client, chn, link) for link in links]
+    # Todo change so that this also posts to the right server
 
 
 @Client.event
@@ -135,16 +137,19 @@ async def on_ready():
 
 async def schedule_connection_dumps():
     while True:
-        now = datetime.now()
+        now = datetime.datetime.now()
         tasks = connector.get_connections_to_post(Db, Connections, now)
-        [post_connection(c) for c in tasks]
-        [connector.update_connection(c["time"] = now) for c in tasks]
-        await asyncio.sleep(1)
+        for c in tasks:
+            await post_connection(Client, c)
+            c["time"] = now
+        connector.update_connections(Db, tasks)
+        await asyncio.sleep(10)
+        # Todo change this to more seconds
 
-# remember to add the time thing in database
+# todo remember to add the time thing in database
 
 connector.discord_bot_run(Client, read_file(f'{FilePath}/bot-token.secret'))
 # Connects with the bot-token saved within file
-Client.loop.create_task(scheduler.)
+Client.loop.create_task(schedule_connection_dumps())
 
 

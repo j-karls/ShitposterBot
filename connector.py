@@ -22,11 +22,13 @@ def database_setup(path):
 
 async def discord_send_message(client, channel, message):
     await client.send_message(channel, message)
+    # Todo change to post in a particular channel in a particular server: do something with channel.id and server.id
+    # Todo what if the server or channel no longer exists?
 
 
-def add_connection(db, subreddit, amount, frequency, selection, channel, server):
+def add_connection(db, subreddit, amount, frequency, selection, channel, server, time_posted):
     return db.insert({'subreddit': subreddit, 'amount': amount, 'frequency': frequency, 'selection': selection,
-                      'channel': channel, 'server': server})
+                      'channel': channel, 'server': server, 'time': time_posted})
 
 
 def remove_connection(db, query, connection_id, channel, server):
@@ -58,7 +60,12 @@ def get_connections(db, query, channel, server):
 
 def is_server_and_channel(query, channel, server):
     return (query.server == server.name) & (query.channel == channel.name)
+# Todo change to server and channel ids
 
 
 def get_connections_to_post(db, query, time):
-    return db.search(time > datetime.fromtimestamp(query.time))
+    return db.search(time > datetime.datetime.fromtimestamp(query.time))
+
+
+def update_connections(db, connections):
+    db.write_back(connections)
