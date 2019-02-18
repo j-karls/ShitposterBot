@@ -63,8 +63,13 @@ def is_server_and_channel(query, channel, server):
 # Todo change to server and channel ids
 
 
-def get_connections_to_post(db, query, time):
-    return db.search(time > datetime.datetime.fromtimestamp(query.time))
+def get_connections_to_post(db, query, time_now):
+    return db.search(query.time.test(is_time, time_now))
+    # Searches for connections where the current time is greater than the time on the connections
+
+
+def is_time(time_to_post, time_now):
+    return time_now > datetime.datetime.fromtimestamp(time_to_post)
 
 
 def update_connections(db, connections):

@@ -29,8 +29,9 @@ async def on_message(message):
     if message.author == Client.user:
         return
 
-    elif msg.startswith('--test'):
-        print(type(connector.get_connections(Db, Connections, chn, srv)[1]))
+    # elif msg.startswith('--test'):
+    #     print(type(connector.get_connections(Db, Connections, chn, srv)[1]))
+    # Test command
 
     if msg.startswith('--help'):
         await connector.discord_send_message(Client, chn, messages.message_help(message))
@@ -45,7 +46,8 @@ async def on_message(message):
             regex = regex_search(r"--add\s+(\w*)\s+(\d*)\s+(\w*)\s+(\w*)", 4, msg)
             subreddit, amount, frequency, selection = \
                 regex.group(1), regex.group(2), check_frequency(regex.group(3)), check_selection(regex.group(4))
-            connector.add_connection(Db, subreddit, amount, frequency, selection, chn.name, srv.name)
+            connector.add_connection(Db, subreddit, amount, frequency, selection, chn.name, srv.name,
+                                     datetime.datetime.now().timestamp())
             await connector.discord_send_message(Client, chn,
                                                  messages.message_added_connection(message, subreddit, amount,
                                                                                    frequency, selection))
@@ -70,7 +72,7 @@ async def on_message(message):
             regex = regex_search(r"--post\s+(\d*)", 1, msg)
             connect_id = int(regex.group(1))
             connection = connector.get_connection(Db, Connections, connect_id, chn, srv)
-            await post_connection(Client, connection)
+            await post_connection(Client, connection, datetime.datetime.now())
         except TypeError:
             await connector.discord_send_message(Client, chn, messages.message_wrong_syntax("--post"))
         except ValueError:
@@ -101,14 +103,30 @@ def regex_search(regex, number_of_match_groups, text):
     return res
 
 
-async def post_connection(client, connection):
-    sub, amount, freq, random, chn, srv = connection["subreddit"], int(connection["amount"]), connection["frequency"], \
-                                (connection["selection"] == "randomize"), connection["channel"], connection["server"]
+def get_channel(client, channel_name, server_name):
+    servers = [server for server in client.servers if server.name == server_name]
+    for server in servers:
+        for channel in server.channels:
+            if channel.name == channel_name:
+                return channel
+                # Todo: Assumes that there's only ever one channel on the same server with the same name.
+                # Todo: This really ought to be done with id's
+    return None
+    # Gets the reference to the channel we want
+
+
+async def post_connection(client, connection, time_now, time_next_post=None):
+    sub, amount, freq, random, chn = connection["subreddit"], int(connection["amount"]), connection["frequency"], \
+                                (connection["selection"] == "randomize"), get_channel(client, connection["channel"],
+                                                                                      connection["server"])
     links = loader.get_reddit_links(sub, amount, freq, random)
-    await connector.discord_send_message(client, chn,
-                                         messages.message_send_links(connection.eid, datetime.datetime.now()))
+    await connector.discord_send_message(client, chn, messages.message_send_links(connection.eid, time_now))
+    # todo channel id instead of name?
     [await connector.discord_send_message(client, chn, link) for link in links]
     # Todo change so that this also posts to the right server
+    if time_next_post:
+        await connector.discord_send_message(client, chn, messages.message_next_post(connection.eid, time_next_post))
+
 
 
 @Client.event
@@ -117,22 +135,17 @@ async def on_ready():
     print(Client.user.name)
     print(Client.user.id)
     print('------')
+    Client.loop.create_task(schedule_connection_dumps())
 
 
-#from apscheduler.scheduler import Scheduler
-
-# Start the scheduler
-#sched = Scheduler()
-#sched.daemonic = False
-#sched.start()
-
-#def job_function():
-#    print("Hello World")
-#    print(datetime.datetime.now())
-#    time.sleep(20)
-
-# Schedules job_function to be run once each minute
-#sched.add_cron_job(job_function,  minute='0-59')
+def calc_next_post_time(time_posted, frequency):
+    return (time_posted + {
+        "hourly": datetime.timedelta(hours=1),
+        "daily": datetime.timedelta(days=1),
+        "weekly": datetime.timedelta(days=7),
+        "monthly": datetime.timedelta(days=30),
+        "yearly": datetime.timedelta(days=365)
+    }[frequency])
 
 
 async def schedule_connection_dumps():
@@ -140,16 +153,13 @@ async def schedule_connection_dumps():
         now = datetime.datetime.now()
         tasks = connector.get_connections_to_post(Db, Connections, now)
         for c in tasks:
-            await post_connection(Client, c)
-            c["time"] = now
+            time_next_post = calc_next_post_time(now, c["frequency"])
+            await post_connection(Client, c, now, time_next_post)
+            c["time"] = time_next_post.timestamp()
+            # The time field means: the time when the connection should be posted next
         connector.update_connections(Db, tasks)
-        await asyncio.sleep(10)
-        # Todo change this to more seconds
-
-# todo remember to add the time thing in database
+        await asyncio.sleep(30)
 
 connector.discord_bot_run(Client, read_file(f'{FilePath}/bot-token.secret'))
 # Connects with the bot-token saved within file
-Client.loop.create_task(schedule_connection_dumps())
-
 

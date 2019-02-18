@@ -56,4 +56,12 @@ def message_error(command_name, msg):
 
 
 def message_send_links(connection_id, time):
-    return f"Posting dump of connection '{connection_id}' at time {time}: \n"
+    return f"Posting dump of connection `{connection_id}` at time {format_datetime(time)}: \n"
+
+
+def message_next_post(connection_id, time_next_post):
+    return f"Connection `{connection_id}` will post again at {format_datetime(time_next_post)}"
+
+
+def format_datetime(time):
+    return time.strftime("%d/%m-%Y, %H:%M")
