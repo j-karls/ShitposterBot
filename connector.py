@@ -45,7 +45,6 @@ def get_connection(db, query, connection_id, channel, server):
     el = [lst for lst in db.search(is_server_and_channel(query, channel, server)) if lst.eid == connection_id]
     if not el:
         # No fitting connection
-        print("here")
         raise ValueError
     if len(el) != 1:
         raise TypeError

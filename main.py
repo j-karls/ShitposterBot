@@ -83,7 +83,7 @@ async def on_message(message):
 
 
 def check_selection(selection):
-    if not ((selection == "top") | (selection == "randomize")):
+    if not ((selection == "top") | (selection == "random")):
         raise TypeError
     return selection
 
@@ -117,7 +117,7 @@ def get_channel(client, channel_name, server_name):
 
 async def post_connection(client, connection, time_now, time_next_post=None):
     sub, amount, freq, random, chn = connection["subreddit"], int(connection["amount"]), connection["frequency"], \
-                                (connection["selection"] == "randomize"), get_channel(client, connection["channel"],
+                                (connection["selection"] == "random"), get_channel(client, connection["channel"],
                                                                                       connection["server"])
     links = loader.get_reddit_links(sub, amount, freq, random)
     await connector.discord_send_message(client, chn, messages.message_send_links(connection.eid, time_now))
