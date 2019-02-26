@@ -22,4 +22,5 @@ pip3 install tinydb
 mkdir shitposterFiles
 
 # Now import the bot secret into the folder shitposterFiles
-# Then run: python3 ShitposterBot/main.py
+# Then run with command: sudo nohup python3 ShitposterBot/main.py
+# Nohup prevents the process from being terminated when the terminal (ssh connection or whatever it is) is disconnected
