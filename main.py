@@ -8,7 +8,7 @@ import os
 
 
 def read_file(path):
-    return open(path, 'r').read()
+    return open(path, 'r').read().rstrip()
     # We don't close the stream ourselves, garbage collector will come along shortly
     # It may be worth doing explicitly
 
