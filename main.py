@@ -1,10 +1,10 @@
 import connector
 import messages
 import loader
-import scheduler
 import re
 import datetime
 import asyncio
+import os
 
 
 def read_file(path):
@@ -14,8 +14,8 @@ def read_file(path):
 
 
 Client = connector.discord_client_start()
-FilePath = './../shitposterFiles'
-Db = connector.database_setup(f'{FilePath}/db.json')
+FilePath = os.path.join(os.path.dirname(__file__), "..", "shitposterFiles")
+Db = connector.database_setup(os.path.abspath(os.path.join(FilePath, "db.json")))
 Connections = connector.database_query_setup()
 
 
@@ -160,6 +160,6 @@ async def schedule_connection_dumps():
         connector.update_connections(Db, tasks)
         await asyncio.sleep(30)
 
-connector.discord_bot_run(Client, read_file(f'{FilePath}/bot-token.secret'))
+connector.discord_bot_run(Client, read_file(os.path.abspath(os.path.join(FilePath, "bot-token.secret"))))
 # Connects with the bot-token saved within file
 
