@@ -64,4 +64,4 @@ def message_next_post(connection_id, time_next_post):
 
 
 def format_datetime(time):
-    return time.strftime("%d/%m-%Y, %H:%M")
+    return time.strftime("%d/%m-%Y, %H:%M %Z")
