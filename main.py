@@ -8,13 +8,14 @@ import os
 
 
 def read_file(path):
-    return open(path, 'r').read().rstrip()
+    with open(path) as f:
+        return f.read().rstrip()
     # We don't close the stream ourselves, garbage collector will come along shortly
     # It may be worth doing explicitly
 
 
 Client = connector.discord_client_start()
-FilePath = os.path.join(os.path.dirname(__file__), "..", "shitposterFiles")
+FilePath = os.path.join(os.path.dirname(__file__), "shitposterFiles")
 Db = connector.database_setup(os.path.abspath(os.path.join(FilePath, "db.json")))
 Connections = connector.database_query_setup()
 
