@@ -121,12 +121,10 @@ async def post_connection(client, connection, time_now, time_next_post=None):
                                                                                       connection["server"])
     links = loader.get_reddit_links(sub, amount, freq, random)
     await connector.discord_send_message(client, chn, messages.message_send_links(connection.eid, time_now))
-    # todo channel id instead of name?
-    [await connector.discord_send_message(client, chn, link) for link in links]
-    # Todo change so that this also posts to the right server
+    for link in links:
+        await connector.discord_send_message(client, chn, messages.message_reddit_link_tuple(link))
     if time_next_post:
         await connector.discord_send_message(client, chn, messages.message_next_post(connection.eid, time_next_post))
-
 
 
 @Client.event

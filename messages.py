@@ -59,6 +59,10 @@ def message_send_links(connection_id, time):
     return f"Posting dump of connection `{connection_id}` at time {format_datetime(time)}: \n"
 
 
+def message_reddit_link_tuple(link_tuple):
+    return f"{link_tuple[0]}\n{link_tuple[1]}"
+
+
 def message_next_post(connection_id, time_next_post):
     return f"Connection `{connection_id}` will post again at {format_datetime(time_next_post)}"
 

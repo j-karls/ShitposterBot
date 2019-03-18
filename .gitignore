@@ -60,3 +60,5 @@ target/
 \.idea/
 
 bot-token\.secret
+
+\.shitposterFiles/

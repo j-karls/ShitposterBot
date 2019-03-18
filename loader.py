@@ -21,7 +21,7 @@ def get_reddit_links(subreddit, amount, frequency, randomize):
         f'{convert_frequency(frequency)}'
     posts = requests.get(url, headers={'User-agent': ua}).json()["data"]["children"]
 
-    links = [post["data"]["url"] for post in posts if not post["data"]["is_self"]]
+    links = [(post["data"]["url"], post["data"]["title"]) for post in posts if not post["data"]["is_self"]]
     # All non-self-posts are turned into their corresponding link
 
     if randomize:
