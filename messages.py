@@ -60,7 +60,7 @@ def message_send_links(connection_id, time):
 
 
 def message_reddit_link_tuple(link_tuple):
-    return f"{link_tuple[0]}\n{link_tuple[1]}"
+    return f"**{link_tuple[0]}**\n{link_tuple[1]}"
 
 
 def message_next_post(connection_id, time_next_post):
