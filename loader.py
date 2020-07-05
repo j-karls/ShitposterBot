@@ -16,6 +16,13 @@ def convert_frequency(frequency):
     return Freq_dict.get(frequency, "")
 
 
+# def bundle_titles_and_urls(posts):
+#    if allow_selfposts:
+#        filter out selfposts
+#    if connection is not allow_nsfw:
+#        add spoiler # for each element that has true in the ["over_18"] field
+
+
 def get_reddit_links(subreddit, amount, frequency, randomize):
     ua, url = 'shitposterBot 0.1', f'https://www.reddit.com/r/{subreddit}/top.json?sort=top&t=' \
         f'{convert_frequency(frequency)}'
